@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -69,239 +68,177 @@
         }
         .preview-item:last-child { border-bottom: none; }
     </style>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản lý hàng bán</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+<style>
+  /* ... giữ nguyên CSS bạn đã viết ... */
+  .example { background: #f9f9f9; padding:10px; border-radius:4px; margin-top:5px; }
+  .preview { margin-top:10px; padding:10px; background:#f0f8ff; border-radius:4px; display:none;}
+  .preview-item { padding:5px 0; border-bottom:1px solid #ddd; }
+  .preview-item:last-child { border-bottom:none; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>Quản Lý Hàng Bán</h1>
-        
-        <form id="salesForm">
-            <!-- 🔹 Tên người nhập -->
-            <div class="form-group">
-                <label for="userName">Tên người nhập:</label>
-                <input type="text" id="userName" placeholder="Nhập tên bạn..." required>
-            </div>
+<div class="container">
+  <h1>Quản Lý Hàng Bán</h1>
 
-            <!-- 🔹 Ngày nhập -->
-            <div class="form-group">
-                <label for="date">Ngày nhập:</label>
-                <input type="date" id="date" required>
-            </div>
-
-            <div class="form-group">
-                <label for="store">Chọn Quán:</label>
-                <select id="store" required>
-                    <option value="">-- Chọn quán --</option>
-                    <option value="DH">DH</option>
-                    <option value="NH">NH</option>
-                    <option value="HXH">HXH</option>
-                    <option value="PY">PY</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="category">Danh Mục:</label>
-                <select id="category" required>
-                    <option value="">-- Chọn danh mục --</option>
-                    <option value="Pizza">Pizza</option>
-                    <option value="Món ăn nhẹ">Món ăn nhẹ</option>
-                    <option value="Nước">Nước</option>
-                    <option value="Combo">Combo</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="input">Nhập Dữ Liệu:</label>
-                <textarea id="input" required placeholder="Nhập theo mẫu..."></textarea>
-                <div class="hint">Mỗi dòng một sản phẩm. Cú pháp: Tên sản phẩm [số lượng]</div>
-                <div class="example" id="exampleText">
-                    Chọn danh mục để xem ví dụ
-                </div>
-            </div>
-            
-            <div class="preview" id="preview">
-                <h3>Xem trước:</h3>
-                <div id="previewList"></div>
-            </div>
-            
-            <button type="submit" id="submitBtn">Lưu Dữ Liệu</button>
-        </form>
-        
-        <div class="message" id="message"></div>
+  <!-- Bước 1 -->
+  <div id="step1">
+    <div class="form-group">
+      <label for="userName">Tên người nhập:</label>
+      <input type="text" id="userName" placeholder="Nhập tên bạn..." required>
     </div>
+    <div class="form-group">
+      <label for="store">Chọn Quán:</label>
+      <select id="store" required>
+        <option value="">-- Chọn quán --</option>
+        <option value="DH">DH</option>
+        <option value="NH">NH</option>
+        <option value="HXH">HXH</option>
+        <option value="PY">PY</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="date">Ngày nhập:</label>
+      <input type="date" id="date" required>
+    </div>
+    <button type="button" id="confirmInfo">Xác nhận</button>
+  </div>
+
+  <!-- Bước 2 -->
+  <div id="step2" style="display:none;">
+    <div class="form-group">
+      <label for="category">Danh Mục:</label>
+      <select id="category" required>
+        <option value="">-- Chọn danh mục --</option>
+        <option value="Pizza">Pizza</option>
+        <option value="Món ăn nhẹ">Món ăn nhẹ</option>
+        <option value="Nước">Nước</option>
+        <option value="Combo">Combo</option>
+      </select>
+      <div class="example" id="exampleText">Chọn danh mục để xem ví dụ</div>
+    </div>
+    <div class="form-group">
+      <label for="input">Nhập Dữ Liệu:</label>
+      <textarea id="input" placeholder="Tên sản phẩm [số lượng]"></textarea>
+    </div>
+    <div class="preview" id="preview"><h3>Preview:</h3><div id="previewList"></div></div>
+    <button id="saveSale">Lưu</button>
+  </div>
+
+  <div class="message" id="message"></div>
+</div>
+
 <script>
-        // Cấu hình Supabase - THAY THẾ bằng thông tin của bạn
-        const SUPABASE_URL = 'https://hrbladxzbzepddetoqzw.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhyYmxhZHh6YnplcGRkZXRvcXp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzODg3NjUsImV4cCI6MjA3NTk2NDc2NX0.jInVzo2xGw-bUbRqwlDVrWVUNrqohbH0iSjXhfUZnFY';
-        
-        // Khởi tạo Supabase client
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        
-        // Ví dụ theo danh mục
-        const examples = {
-            'Pizza': 'Bò L 18\nBò S 10\nGà L 15\nGà S 12\nMeat Lover 8\nHải Sản L 6',
-            'Món ăn nhẹ': 'Gà lắc 20\nGà rán 15\nMì Ý 10\nBánh mì bơ tỏi 25\nSalad 8',
-            'Nước': 'Coca ly 30\nCoca lon 15\nNước suối 40\nTrà đào 12\nTrà chanh 10\nBia 8',
-            'Combo': 'Combo 1 5\nCombo 2 8\nCombo 3 3\nCombo 4 6'
-        };
-        
-        const form = document.getElementById('salesForm');
-        const categorySelect = document.getElementById('category');
-        const inputText = document.getElementById('input');
-        const exampleText = document.getElementById('exampleText');
-        const previewDiv = document.getElementById('preview');
-        const previewList = document.getElementById('previewList');
-        const submitBtn = document.getElementById('submitBtn');
-        const messageDiv = document.getElementById('message');
-        const historyList = document.getElementById('historyList');
-        
-        // Cập nhật ví dụ khi chọn danh mục
-        categorySelect.addEventListener('change', function() {
-            const category = this.value;
-            if (category && examples[category]) {
-                exampleText.innerHTML = '<strong>Ví dụ:</strong><br>' + examples[category].replace(/\n/g, '<br>');
-                inputText.placeholder = examples[category];
-            } else {
-                exampleText.textContent = 'Chọn danh mục để xem ví dụ';
-                inputText.placeholder = 'Nhập theo mẫu...';
-            }
-            inputText.value = '';
-            previewDiv.style.display = 'none';
-        });
-        
-        // Parse dữ liệu nhập vào
-        function parseInput(text) {
-            const lines = text.trim().split('\n');
-            const items = [];
-            
-            for (let line of lines) {
-                line = line.trim();
-                if (!line) continue;
-                
-                // Tìm số cuối cùng trong dòng
-                const match = line.match(/^(.+?)\s+(\d+)$/);
-                if (match) {
-                    const product = match[1].trim();
-                    const quantity = parseInt(match[2]);
-                    items.push({ product, quantity });
-                }
-            }
-            
-            return items;
-        }
-        
-        // Hiển thị preview khi nhập
-        inputText.addEventListener('input', function() {
-            const text = this.value;
-            if (!text.trim()) {
-                previewDiv.style.display = 'none';
-                return;
-            }
-            
-            const items = parseInput(text);
-            if (items.length > 0) {
-                previewList.innerHTML = items.map(item => 
-                    `<div class="preview-item">${item.product} × ${item.quantity}</div>`
-                ).join('');
-                previewDiv.style.display = 'block';
-            } else {
-                previewDiv.style.display = 'none';
-            }
-        });
-        
-        // Hiển thị thông báo
-        function showMessage(text, type) {
-            messageDiv.textContent = text;
-            messageDiv.className = `message ${type}`;
-            messageDiv.style.display = 'block';
-            setTimeout(() => {
-                messageDiv.style.display = 'none';
-            }, 3000);
-        }
-      
-       // 🔹 Chuẩn hóa tiếng Việt
-function removeVietnameseTones(str) {
-  return str
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/Đ/g, "D");
+const supabaseUrl = 'https://hrbladxzbzepddetoqzw.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhyYmxhZHh6YnplcGRkZXRvcXp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzODg3NjUsImV4cCI6MjA3NTk2NDc2NX0.jInVzo2xGw-bUbRqwlDVrWVUNrqohbH0iSjXhfUZnFY';
+const sb = supabase.createClient(supabaseUrl, supabaseKey);
+
+let fixedUserName='', fixedStore='', fixedDate='';
+
+const msgDiv = document.getElementById('message');
+
+// Step 1
+document.getElementById('confirmInfo').addEventListener('click', () => {
+  const user = document.getElementById('userName').value.trim();
+  const store = document.getElementById('store').value;
+  const date = document.getElementById('date').value;
+  if(!user || !store || !date){ alert("Vui lòng nhập đầy đủ thông tin."); return; }
+  fixedUserName = user; fixedStore = store; fixedDate = date;
+  document.getElementById('step1').style.display='none';
+  document.getElementById('step2').style.display='block';
+});
+
+// Ví dụ theo category
+const examples = {
+  'Pizza':'Bò L 18\nGà S 12\nMeat Lover 8\nHải Sản L 6',
+  'Món ăn nhẹ':'Gà lắc 20\nGà rán 15\nMì Ý 10\nSalad 8',
+  'Nước':'Coca ly 30\nNước suối 40\nTrà đào 12\nBia 8',
+  'Combo':'Combo 1 5\nCombo 2 8\nCombo 3 3\nCombo 4 6'
+};
+
+const categorySelect = document.getElementById('category');
+const inputText = document.getElementById('input');
+const exampleText = document.getElementById('exampleText');
+const previewDiv = document.getElementById('preview');
+const previewList = document.getElementById('previewList');
+const saveBtn = document.getElementById('saveSale');
+
+categorySelect.addEventListener('change', ()=>{
+  const cat = categorySelect.value;
+  if(cat && examples[cat]){
+    exampleText.innerHTML = '<strong>Ví dụ:</strong><br>'+examples[cat].replace(/\n/g,'<br>');
+    inputText.placeholder = examples[cat];
+  }else{
+    exampleText.textContent='Chọn danh mục để xem ví dụ';
+    inputText.placeholder='Tên sản phẩm [số lượng]';
+  }
+  inputText.value=''; previewDiv.style.display='none';
+});
+
+// Parse input
+function parseInput(text){
+  const lines = text.trim().split('\n');
+  const items=[];
+  for(let line of lines){
+    line=line.trim(); if(!line) continue;
+    const match=line.match(/^(.+?)\s+(\d+)$/);
+    if(match) items.push({product:match[1].trim(), quantity:parseInt(match[2])});
+  }
+  return items;
 }
 
-// 🔹 Hàm chuẩn hóa tên món
-function normalizeProductName(input) {
-  const cleaned = removeVietnameseTones(input.trim().toLowerCase());
+// Preview
+inputText.addEventListener('input', ()=>{
+  const items = parseInput(inputText.value);
+  if(items.length>0){
+    previewList.innerHTML = items.map(i=>`${i.product} × ${i.quantity}`).map(s=>`<div class="preview-item">${s}</div>`).join('');
+    previewDiv.style.display='block';
+  }else previewDiv.style.display='none';
+});
 
-  // mapping rút gọn
-  const keywords = {
-    'bo l': 'Bò L',
-    'bo s': 'Bò S',
-    'ga l': 'Gà L',
-    'ga s': 'Gà S',
-    'meat lover': 'Meat Lover',
-    'hai san': 'Hải Sản L',
-    'ga ran': 'Gà Rán',
-    'coca': 'Coca lon',
-    'nuoc suoi': 'Nước suối',
-  };
+// Message
+function showMessage(text,type){
+  msgDiv.textContent=text;
+  msgDiv.className=`message ${type}`;
+  msgDiv.style.display='block';
+  setTimeout(()=>{ msgDiv.style.display='none'; },3000);
+}
 
-  for (const key in keywords) {
-    if (cleaned.includes(key)) return keywords[key];
-  }
-
-  // nếu không khớp thì giữ nguyên
+// Chuẩn hóa tên món
+function removeVietnameseTones(str){return str.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/Đ/g,"D");}
+function normalizeProductName(input){
+  const cleaned=removeVietnameseTones(input.trim().toLowerCase());
+  const keywords={'bo l':'Bò L','bo s':'Bò S','ga l':'Gà L','ga s':'Gà S','meat lover':'Meat Lover','hai san':'Hải Sản L','ga ran':'Gà Rán','coca':'Coca lon','nuoc suoi':'Nước suối'};
+  for(const k in keywords) if(cleaned.includes(k)) return keywords[k];
   return input.trim();
 }
 
-// 🔹 Lưu dữ liệu
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const store = document.getElementById('store').value;
-  const category = document.getElementById('category').value;
+// Lưu dữ liệu
+saveBtn.addEventListener('click', async ()=>{
+  const category = categorySelect.value;
   const text = inputText.value;
-  const userName = document.getElementById('userName').value.trim();
-  const inputDate = document.getElementById('date').value;
-
-  if (!userName || !inputDate) {
-    showMessage('Vui lòng nhập tên người nhập và ngày nhập!', 'error');
-    return;
-  }
-
+  if(!category) return showMessage('Chọn danh mục trước!','error');
   const items = parseInput(text);
+  if(items.length===0) return showMessage('Nhập dữ liệu đúng định dạng!','error');
 
-  if (items.length === 0) {
-    showMessage('Vui lòng nhập dữ liệu đúng định dạng', 'error');
-    return;
-  }
+  saveBtn.disabled=true; saveBtn.textContent='Đang lưu...';
 
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Đang lưu...';
-
-  try {
-    const records = items.map(item => ({
-      store: store,
-      category: category,
-      product: normalizeProductName(item.product), // ✅ Sử dụng hàm đúng
-      quantity: item.quantity,
-      user_name: userName,
-      input_date: inputDate,
-      created_at: new Date().toISOString(),
-    }));
-
-    const { data, error } = await supabase.from('pizza_sales').insert(records);
-    if (error) throw error;
-
-    showMessage(`Đã lưu thành công ${items.length} sản phẩm!`, 'success');
-    form.reset();
-    previewDiv.style.display = 'none';
-    exampleText.textContent = 'Chọn danh mục để xem ví dụ';
-  } catch (error) {
-    showMessage('Lỗi: ' + error.message, 'error');
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Lưu Dữ Liệu';
+  try{
+    const records = items.map(i=>({store:fixedStore,category,product:normalizeProductName(i.product),quantity:i.quantity,user_name:fixedUserName,input_date:fixedDate,created_at:new Date().toISOString()}));
+    const {data,error}=await sb.from('pizza_sales').insert(records);
+    if(error) throw error;
+    showMessage(`Đã lưu thành công ${items.length} sản phẩm!`,'success');
+    inputText.value=''; previewDiv.style.display='none';
+  }catch(err){
+    showMessage('Lỗi: '+err.message,'error');
+  }finally{
+    saveBtn.disabled=false; saveBtn.textContent='Lưu';
   }
 });
-
-    </script>
+</script>
+</body>
 </html>
