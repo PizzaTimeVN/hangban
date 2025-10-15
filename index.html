@@ -212,7 +212,7 @@ function showMessage(text,type){
 function removeVietnameseTones(str){return str.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/Đ/g,"D");}
 function normalizeProductName(input){
   const cleaned=removeVietnameseTones(input.trim().toLowerCase());
-  const keywords={'
+  const keywords={
   'bo s': 'Bò S',
   'bo l': 'Bò L',
   'pho mai s': 'Phô mai S',
