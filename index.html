@@ -1,313 +1,528 @@
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý hàng bán</title>
+    <title>Pizza Sales Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            padding: 20px;
-            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
         }
+
         .container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
-            background: white;
+            padding: 20px;
+        }
+
+        .header {
+            background: #fff;
             padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
         }
-        h1 { color: #333; margin-bottom: 30px; text-align: center; font-size: 24px; }
-        .form-group { margin-bottom: 20px; }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .card {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
         label {
-            display: block; margin-bottom: 8px; color: #555; font-weight: 500;
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 14px;
         }
-        select, input[type="text"], input[type="date"], textarea {
-            width: 100%; padding: 12px; border: 1px solid #ddd;
-            border-radius: 4px; font-size: 16px; background: white;
-            font-family: Arial, sans-serif;
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: #fff;
         }
-        textarea { min-height: 120px; resize: vertical; }
-        select:focus, input:focus, textarea:focus {
-            outline: none; border-color: #666;
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
         }
-        .hint { font-size: 13px; color: #999; margin-top: 5px; }
-        .example {
-            background: #f9f9f9; padding: 10px; border-radius: 4px;
-            font-size: 13px; color: #666; margin-top: 8px;
-            border-left: 3px solid #ddd;
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        button {
-            width: 100%; padding: 14px; background: #333; color: white;
-            border: none; border-radius: 4px; font-size: 16px;
-            cursor: pointer; font-weight: 500; margin-top: 10px;
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
         }
-        button:hover { background: #555; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-        .message {
-            margin-top: 20px; padding: 12px; border-radius: 4px;
-            text-align: center; display: none;
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
         }
-        .message.success {
-            background: #d4edda; color: #155724; border: 1px solid #c3e6cb;
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+            margin-top: 20px;
         }
-        .message.error {
-            background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;
+
+        .btn-success:hover {
+            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
         }
-        .preview {
-            margin-top: 15px; padding: 12px; background: #f0f8ff;
-            border-radius: 4px; border: 1px solid #b8d4e8; display: none;
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+            padding: 8px 16px;
+            width: auto;
+            font-size: 14px;
         }
-        .preview h3 { font-size: 14px; color: #333; margin-bottom: 8px; }
-        .preview-item {
-            padding: 6px 0; color: #555; font-size: 14px;
-            border-bottom: 1px solid #e0e0e0;
+
+        .btn-danger:hover {
+            background: #c0392b;
         }
-        .preview-item:last-child { border-bottom: none; }
+
+        .btn-add {
+            background: #95a5a6;
+            color: white;
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .btn-add:hover {
+            background: #7f8c8d;
+        }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 120px 80px;
+            gap: 10px;
+            align-items: end;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .item-list {
+            margin-top: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .info-badge {
+            background: #ecf0f1;
+            padding: 8px 16px;
+            border-radius: 6px;
+            display: inline-block;
+            margin: 5px;
+            font-size: 13px;
+            color: #2c3e50;
+        }
+
+        .info-section {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 600px) {
+            .item-row {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quản lý hàng bán</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
-<style>
-  /* ... giữ nguyên CSS bạn đã viết ... */
-  .example { background: #f9f9f9; padding:10px; border-radius:4px; margin-top:5px; }
-  .preview { margin-top:10px; padding:10px; background:#f0f8ff; border-radius:4px; display:none;}
-  .preview-item { padding:5px 0; border-bottom:1px solid #ddd; }
-  .preview-item:last-child { border-bottom:none; }
-</style>
 </head>
 <body>
-<div class="container">
-  <h1>Quản Lý Hàng Bán</h1>
+    <div class="container">
+        <div class="header">
+            <h1>🍕 Pizza Sales Tracker</h1>
+            <p class="subtitle">Hệ thống quản lý doanh số bán hàng</p>
+        </div>
 
-  <!-- Bước 1 -->
-  <div id="step1">
-    <div class="form-group">
-      <label for="userName">Tên người nhập:</label>
-      <input type="text" id="userName" placeholder="Nhập tên bạn..." required>
+        <!-- Step 1: Login -->
+        <div id="loginStep" class="card">
+            <h2 style="margin-bottom: 25px; color: #2c3e50;">Đăng nhập</h2>
+            
+            <div class="form-group">
+                <label for="saleDate">Ngày bán</label>
+                <input type="date" id="saleDate" required>
+            </div>
+
+            <div class="form-group">
+                <label for="store">Quán</label>
+                <select id="store" required>
+                    <option value="">-- Chọn quán --</option>
+                    <option value="DH">DH</option>
+                    <option value="NH">NH</option>
+                    <option value="HXH">HXH</option>
+                    <option value="PY">PY</option>
+                </select>
+            </div>
+
+           <div class="form-group">
+                <label for="employee">Người nhập</label>
+                <input type="text" id="employee" placeholder="Nhập tên người nhập" required>
+            </div>
+
+            <button class="btn btn-primary" onclick="login()">Tiếp tục</button>
+        </div>
+
+        <!-- Step 2: Input Sales -->
+        <div id="inputStep" class="card hidden">
+            <h2 style="margin-bottom: 20px; color: #2c3e50;">Nhập dữ liệu bán hàng</h2>
+            
+            <div class="info-section">
+                <span class="info-badge" id="displayDate"></span>
+                <span class="info-badge" id="displayStore"></span>
+                <span class="info-badge" id="displayEmployee"></span>
+            </div>
+
+            <div id="alertContainer"></div>
+
+            <div class="form-group">
+                <label for="category">Danh mục</label>
+                <select id="category" onchange="updateProductList()">
+                    <option value="">-- Chọn danh mục --</option>
+                </select>
+            </div>
+
+            <div class="item-list" id="itemList"></div>
+
+            <button class="btn btn-add" onclick="addItemRow()">+ Thêm mặt hàng</button>
+            <button class="btn btn-success" onclick="saveSales()">Lưu dữ liệu</button>
+        </div>
     </div>
-    <div class="form-group">
-      <label for="store">Chọn Quán:</label>
-      <select id="store" required>
-        <option value="">-- Chọn quán --</option>
-        <option value="DH">DH</option>
-        <option value="NH">NH</option>
-        <option value="HXH">HXH</option>
-        <option value="PY">PY</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="date">Ngày bán:</label>
-      <input type="date" id="date" required>
-    </div>
-    <button type="button" id="confirmInfo">Xác nhận</button>
-  </div>
 
-  <!-- Bước 2 -->
-  <div id="step2" style="display:none;">
-    <div class="form-group">
-      <label for="category">Danh Mục:</label>
-      <select id="category" required>
-        <option value="">-- Chọn danh mục --</option>
-        <option value="Pizza">Pizza</option>
-        <option value="Món ăn nhẹ">Món ăn nhẹ</option>
-        <option value="Nước">Nước</option>
-        <option value="Combo">Combo</option>
-      </select>
-      <div class="example" id="exampleText">Chọn danh mục để xem ví dụ</div>
-    </div>
-    <div class="form-group">
-      <label for="input">Nhập Dữ Liệu:</label>
-      <textarea id="input" placeholder="Tên sản phẩm [số lượng]"></textarea>
-    </div>
-    <div class="preview" id="preview"><h3>Preview:</h3><div id="previewList"></div></div>
-    <button id="saveSale">Lưu</button>
-  </div>
+    <script>
+        // Cấu hình Supabase - THAY ĐỔI THÔNG TIN NÀY
+        const SUPABASE_URL = 'https://tyuufjwutazjfuiawiul.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5dXVmand1dGF6amZ1aWF3aXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1MDk4OTIsImV4cCI6MjA3NjA4NTg5Mn0.8WEsb2tBD6akNA9h9tR9zIAqjkZz0xZYVNbYCx2dEbc';
+        const TABLE_NAME = 'pizza_sales'; // Đổi tên bảng tại đây
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  <div class="message" id="message"></div>
-</div>
+        // Dữ liệu mẫu
+        const categories = [
+            { id: 1, name: 'Pizza Truyền thống Size L' },
+            { id: 2, name: 'Pizza Truyền thống Size S' },
+            { id: 3, name: 'Pizza Đặc biệt' },
+            { id: 4, name: 'Món ăn nhẹ' },
+            { id: 5, name: 'Nước uống' },
+            { id: 6, name: 'Combo' }
+        ];
 
-<script>
-const supabaseUrl = 'https://hrbladxzbzepddetoqzw.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhyYmxhZHh6YnplcGRkZXRvcXp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzODg3NjUsImV4cCI6MjA3NTk2NDc2NX0.jInVzo2xGw-bUbRqwlDVrWVUNrqohbH0iSjXhfUZnFY';
-const sb = supabase.createClient(supabaseUrl, supabaseKey);
+        const products = [
+            // --- Pizza Truyền thống Size L ---
+            { id: 1, categoryId: 1, name: 'Bò' },
+            { id: 2, categoryId: 1, name: 'Phô mai' },
+            { id: 3, categoryId: 1, name: 'Gà teriyaki' },
+            { id: 4, categoryId: 1, name: 'Hải sản' },
+            { id: 5, categoryId: 1, name: 'Xúc xích heo' },
+            { id: 6, categoryId: 1, name: 'Pizza nấm rau củ' },
+            { id: 7, categoryId: 1, name: 'Xúc xích Đức' },
+            { id: 8, categoryId: 1, name: 'Cá ngừ' },
+            { id: 9, categoryId: 1, name: 'Ba rọi xông khói' },
 
-let fixedUserName='', fixedStore='', fixedDate='';
+            // --- Pizza Truyền thống Size S ---
+            { id: 10, categoryId: 2, name: 'Bò' },
+            { id: 11, categoryId: 2, name: 'Phô mai' },
+            { id: 12, categoryId: 2, name: 'Gà teriyaki' },
+            { id: 13, categoryId: 2, name: 'Xúc xích heo' },
+            { id: 14, categoryId: 2, name: 'Cá ngừ' },
+            { id: 15, categoryId: 2, name: 'Ba rọi xông khói' },
 
-const msgDiv = document.getElementById('message');
+            // --- Pizza Đặc biệt ---
+            { id: 16, categoryId: 3, name: 'Salami' },
+            { id: 17, categoryId: 3, name: 'Phô mai tươi' },
+            { id: 18, categoryId: 3, name: 'Meat Lover' },
+            { id: 19, categoryId: 3, name: 'Tôm thanh cua' },
+            { id: 20, categoryId: 3, name: 'Khô gà - Lạp xưởng' },
+            { id: 21, categoryId: 3, name: 'Thập cẩm' },
+            { id: 22, categoryId: 3, name: 'Bò sốt cay' },
+            { id: 23, categoryId: 3, name: 'Hải sản đặc biệt' },
 
-// Step 1
-document.getElementById('confirmInfo').addEventListener('click', () => {
-  const user = document.getElementById('userName').value.trim();
-  const store = document.getElementById('store').value;
-  const date = document.getElementById('date').value;
-  if(!user || !store || !date){ alert("Vui lòng nhập đầy đủ thông tin."); return; }
-  fixedUserName = user; fixedStore = store; fixedDate = date;
-  document.getElementById('step1').style.display='none';
-  document.getElementById('step2').style.display='block';
-});
+            
+            // --- Món ăn nhẹ ---
+            { id: 24, categoryId: 4, name: 'Gà sốt cay' },
+            { id: 25, categoryId: 4, name: 'Khoai tây chiên' },
+            { id: 26, categoryId: 4, name: 'Tok lắc phô mai' },
+            { id: 27, categoryId: 4, name: 'Bánh mì bơ tỏi' },
+            { id: 28, categoryId: 4, name: 'Gà lắc phô mai cay' },
+            { id: 29, categoryId: 4, name: 'Gà rán chiên giòn' },
+            { id: 30, categoryId: 4, name: 'Mì Ý đút lò' },
+            { id: 31, categoryId: 4, name: 'Mì Ý sốt bò bằm' },
+            { id: 32, categoryId: 4, name: 'Salad cá ngừ' },
+            { id: 33, categoryId: 4, name: 'Salad dầu giấm' },
+            { id: 34, categoryId: 4, name: 'Bánh mì phô mai' },
+            { id: 35, categoryId: 4, name: 'Bắp phô mai' },
 
-// Ví dụ theo category
-const examples = {
-  'Pizza':'Bò L 18\nGà S 12\nMeat Lover 8\nHải Sản L 6',
-  'Món ăn nhẹ':'Gà lắc 20\nGà rán 15\nMì Ý 10\nSalad 8',
-  'Nước':'Coca ly 30\nNước suối 40\nTrà đào 12\nBia 8',
-  'Combo':'Combo 1 5\nCombo 2 8\nCombo 3 3\nCombo 4 6'
-};
+            // --- Nước uống ---
+            { id: 36, categoryId: 5, name: 'Nước ngọt' },
+            { id: 37, categoryId: 5, name: 'Nước suối' },
+            { id: 38, categoryId: 5, name: 'Đá me hạt mềm' },
+            { id: 39, categoryId: 5, name: 'Trà chanh' },
+            { id: 40, categoryId: 5, name: 'Trà đào' },
+            { id: 41, categoryId: 5, name: 'Blanc 1664' },
 
-const categorySelect = document.getElementById('category');
-const inputText = document.getElementById('input');
-const exampleText = document.getElementById('exampleText');
-const previewDiv = document.getElementById('preview');
-const previewList = document.getElementById('previewList');
-const saveBtn = document.getElementById('saveSale');
+            // --- Combo ---
+            { id: 42, categoryId: 6, name: 'Combo 1' },
+            { id: 43, categoryId: 6, name: 'Combo 2' },
+            { id: 44, categoryId: 6, name: 'Combo 3' },
+            { id: 45, categoryId: 6, name: 'Combo 4' },
+            { id: 46, categoryId: 6, name: 'Combo 5' },
+            { id: 47, categoryId: 6, name: 'Combo 6' },
+            { id: 48, categoryId: 6, name: 'Combo 7' },
+            { id: 49, categoryId: 6, name: 'Combo 8' }
 
-categorySelect.addEventListener('change', ()=>{
-  const cat = categorySelect.value;
-  if(cat && examples[cat]){
-    exampleText.innerHTML = '<strong>Ví dụ:</strong><br>'+examples[cat].replace(/\n/g,'<br>');
-    inputText.placeholder = examples[cat];
-  }else{
-    exampleText.textContent='Chọn danh mục để xem ví dụ';
-    inputText.placeholder='Tên sản phẩm [số lượng]';
-  }
-  inputText.value=''; previewDiv.style.display='none';
-});
+        ];
 
-// Parse input
-function parseInput(text){
-  const lines = text.trim().split('\n');
-  const items=[];
-  for(let line of lines){
-    line=line.trim(); if(!line) continue;
-    const match=line.match(/^(.+?)\s+(\d+)$/);
-    if(match) items.push({product:match[1].trim(), quantity:parseInt(match[2])});
-  }
-  return items;
-}
+        let sessionData = {};
+        let itemCounter = 0;
 
-// Preview
-inputText.addEventListener('input', ()=>{
-  const items = parseInput(inputText.value);
-  if(items.length>0){
-    previewList.innerHTML = items.map(i=>`${i.product} × ${i.quantity}`).map(s=>`<div class="preview-item">${s}</div>`).join('');
-    previewDiv.style.display='block';
-  }else previewDiv.style.display='none';
-});
+        // Khởi tạo
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('saleDate').valueAsDate = new Date();
+            loadCategories();
+        });
 
-// Message
-function showMessage(text,type){
-  msgDiv.textContent=text;
-  msgDiv.className=`message ${type}`;
-  msgDiv.style.display='block';
-  setTimeout(()=>{ msgDiv.style.display='none'; },3000);
-}
+        function loadCategories() {
+            const categorySelect = document.getElementById('category');
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.name;
+                categorySelect.appendChild(option);
+            });
+        }
 
-// Chuẩn hóa tên món
-function removeVietnameseTones(str){return str.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/Đ/g,"D");}
-function normalizeProductName(input){
-  const cleaned=removeVietnameseTones(input.trim().toLowerCase());
-  const keywords={
-  'bo s': 'Bò S',
-  'bo l': 'Bò L',
-  'pho mai s': 'Phô mai S',
-  'pho mai l': 'Phô mai L',
-  'pm s': 'Phô mai S',
-  'pm l': 'Phô mai S',
-  'ga teriyaki s': 'Gà teriyaki S',
-  'ga teriyaki l': 'Gà teriyaki L',
-  'hai san l': 'Hải sản L',
-  'xuc xich heo s': 'Xúc xích heo S',
-  'xuc xich heo l': 'Xúc xích heo L',
-  'xxh s': 'Xúc xích heo S',
-    'xxh l': 'Xúc xích heo L',
-  'nam rau cu': 'Nấm rau củ L',
-  
-  'xx duc ': 'Xúc xích Đức L',
-  'xuc xich duc': 'Xúc xích Đức L',
-  'ca ngu s': 'Cá ngừ S',
-  'ca ngu l': 'Cá ngừ L',
-  'ba roi xong khoi s': 'Ba rọi xông khói S',
-  'ba roi xong khoi l': 'Ba rọi xông khói L',
+        function login() {
+            const date = document.getElementById('saleDate').value;
+            const store = document.getElementById('store').value;
+            const employee = document.getElementById('employee').value;
 
-  // --- PIZZA ĐẶC BIỆT ---
-  'salami': 'Salami L',
-  'pho mai tuoi': 'Phô mai tươi L',
-    'pmt': 'Phô mai tươi L',
-  'meat lover': 'Meat Lover L',
-  'tom thanh cua': 'Tôm thanh cua L',
-  'kho ga lap xuong': 'Khô gà - Lạp xưởng L',
-  'thap cam': 'Thập cẩm L',
-  'bo sot cay': 'Bò sốt cay L',
-  'hai san dac biet': 'Hải sản đặc biệt L',
-      'hai san db': 'Hải sản đặc biệt L',
+            if (!date || !store || !employee) {
+                showAlert('Vui lòng điền đầy đủ thông tin!', 'error');
+                return;
+            }
 
-   // Món ăn nhẹ
-  'ga sot cay': 'Gà sốt cay',
-  'ga sc': 'Gà sốt cay',
-  'khoai tay chien s': 'Khoai tây chiên S',
-  'khoai tay chien l': 'Khoai tây chiên L',
-  'ktc': 'Khoai tây chiên S',
-  'tok lac': 'Tok lắc',
-      'tokbokki': 'Tok lắc',
-  'banh mi bo toi': 'Bánh mì bơ tỏi',
-  'bmbt': 'Bánh mì bơ tỏi',
-  'ga lac s': 'Gà lắc S',
-  'ga lac l': 'Gà lắc L',
-  'ga lac': 'Gà lắc ',
-  'ga ran s': 'Gà rán S',
-  'ga ran': 'Gà rán S',
-  'ga ran l': 'Gà rán L',
-  'my y dut lo': 'Mì ý đút lò',
-  'my y sot bo bam': 'Mì ý sốt bò bằm',    
-  'mi y dut lo': 'Mì ý đút lò',
-  'mi y sot bo bam': 'Mì ý sốt bò bằm',
-  'mi y': 'Mì ý sốt bò bằm',
-  'salad ca ngu': 'Salad cá ngừ',
-  'salad dau giam': 'Salad dầu giấm',
-  'banh mi pho mai': 'Bánh mì phô mai',
-  'bap pho mai': 'Bắp phô mai',
+            sessionData = { date, store, employee };
 
-  // Nước uống
-  'coca ly': 'Coca ly',
-  'coca lon': 'Coca lon',
-  'nuoc suoi': 'Nước suối',
-  'da me': 'Đá me',
-  'tra chanh': 'Trà chanh',
-  'tra dao': 'Trà đào',
-  'blanc': 'Blanc'
-};
-  for(const k in keywords) if(cleaned.includes(k)) return keywords[k];
-  return input.trim();
-}
+            document.getElementById('displayDate').textContent = `📅 ${date}`;
+            document.getElementById('displayStore').textContent = `🏪 ${store}`;
+            document.getElementById('displayEmployee').textContent = `👤 ${employee}`;
 
-// Lưu dữ liệu
-saveBtn.addEventListener('click', async ()=>{
-  const category = categorySelect.value;
-  const text = inputText.value;
-  if(!category) return showMessage('Chọn danh mục trước!','error');
-  const items = parseInput(text);
-  if(items.length===0) return showMessage('Nhập dữ liệu đúng định dạng!','error');
+            document.getElementById('loginStep').classList.add('hidden');
+            document.getElementById('inputStep').classList.remove('hidden');
+        }
 
-  saveBtn.disabled=true; saveBtn.textContent='Đang lưu...';
+        function updateProductList() {
+            const categoryId = parseInt(document.getElementById('category').value);
+            if (!categoryId) return;
 
-  try{
-    const records = items.map(i=>({store:fixedStore,category,product:normalizeProductName(i.product),quantity:i.quantity,user_name:fixedUserName,input_date:fixedDate,created_at:new Date().toISOString()}));
-    const {data,error}=await sb.from('pizza_sales').insert(records);
-    if(error) throw error;
-    showMessage(`Đã lưu thành công ${items.length} sản phẩm!`,'success');
-    inputText.value=''; previewDiv.style.display='none';
-  }catch(err){
-    showMessage('Lỗi: '+err.message,'error');
-  }finally{
-    saveBtn.disabled=false; saveBtn.textContent='Lưu';
-  }
-});
-</script>
+            const filteredProducts = products.filter(p => p.categoryId === categoryId);
+            
+            // Cập nhật tất cả dropdown sản phẩm hiện có
+            document.querySelectorAll('.product-select').forEach(select => {
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">-- Chọn mặt hàng --</option>';
+                filteredProducts.forEach(product => {
+                    const option = document.createElement('option');
+                    option.value = product.id;
+                    option.textContent = product.name;
+                    select.appendChild(option);
+                });
+                select.value = currentValue;
+            });
+        }
+
+        function addItemRow() {
+            const categoryId = parseInt(document.getElementById('category').value);
+            if (!categoryId) {
+                showAlert('Vui lòng chọn danh mục trước!', 'error');
+                return;
+            }
+
+            const filteredProducts = products.filter(p => p.categoryId === categoryId);
+            itemCounter++;
+
+            const itemList = document.getElementById('itemList');
+            const row = document.createElement('div');
+            row.className = 'item-row';
+            row.id = `item-${itemCounter}`;
+
+            let productOptions = '<option value="">-- Chọn mặt hàng --</option>';
+            filteredProducts.forEach(product => {
+                productOptions += `<option value="${product.id}">${product.name}</option>`;
+            });
+
+            row.innerHTML = `
+                <div class="form-group" style="margin: 0;">
+                    <label>Danh mục</label>
+                    <input type="text" value="${categories.find(c => c.id === categoryId).name}" readonly style="background: #ecf0f1;">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label>Mặt hàng</label>
+                    <select class="product-select" required>
+                        ${productOptions}
+                    </select>
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label>Số lượng</label>
+                    <input type="number" class="quantity-input" min="1" value="1" required>
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-danger" onclick="removeItem(${itemCounter})">Xóa</button>
+                </div>
+            `;
+
+            itemList.appendChild(row);
+        }
+
+        function removeItem(id) {
+            const item = document.getElementById(`item-${id}`);
+            if (item) item.remove();
+        }
+
+        async function saveSales() {
+            const rows = document.querySelectorAll('.item-row');
+            if (rows.length === 0) {
+                showAlert('Vui lòng thêm ít nhất một mặt hàng!', 'error');
+                return;
+            }
+
+            const salesData = [];
+            let isValid = true;
+
+            rows.forEach(row => {
+                const productId = row.querySelector('.product-select').value;
+                const quantity = row.querySelector('.quantity-input').value;
+
+                if (!productId || !quantity || quantity < 1) {
+                    isValid = false;
+                    return;
+                }
+
+                const product = products.find(p => p.id === parseInt(productId));
+                salesData.push({
+                    date: sessionData.date,
+                    store: sessionData.store,
+                    employee: sessionData.employee,
+                    category: categories.find(c => c.id === product.categoryId).name,
+                    product_name: product.name,
+                    quantity: parseInt(quantity),
+                    created_at: new Date().toISOString()
+                });
+            });
+
+            if (!isValid) {
+                showAlert('Vui lòng điền đầy đủ thông tin cho tất cả mặt hàng!', 'error');
+                return;
+            }
+
+            try {
+                // Lưu vào Supabase
+                const { data, error } = await supabase
+                    .from(TABLE_NAME)
+                    .insert(salesData);
+
+                if (error) throw error;
+
+                showAlert('✅ Lưu dữ liệu thành công!', 'success');
+                
+                // Reset form
+                setTimeout(() => {
+                    document.getElementById('itemList').innerHTML = '';
+                    document.getElementById('category').value = '';
+                    itemCounter = 0;
+                }, 1500);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('❌ Lỗi khi lưu dữ liệu: ' + error.message, 'error');
+            }
+        }
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            container.innerHTML = '';
+            container.appendChild(alert);
+
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+    </script>
 </body>
 </html>
