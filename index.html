@@ -212,7 +212,61 @@ function showMessage(text,type){
 function removeVietnameseTones(str){return str.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/Đ/g,"D");}
 function normalizeProductName(input){
   const cleaned=removeVietnameseTones(input.trim().toLowerCase());
-  const keywords={'bo l':'Bò L','bo s':'Bò S','ga l':'Gà L','ga s':'Gà S','meat lover':'Meat Lover','hai san':'Hải Sản L','ga ran':'Gà Rán','coca':'Coca lon','nuoc suoi':'Nước suối'};
+  const keywords={'
+  'bo s': 'Bò S',
+  'bo l': 'Bò L',
+  'pho mai s': 'Phô mai S',
+  'pho mai l': 'Phô mai L',
+  'ga teriyaki s': 'Gà teriyaki S',
+  'ga teriyaki l': 'Gà teriyaki L',
+  'hai san l': 'Hải sản L',
+  'xuc xich heo s': 'Xúc xích heo S',
+  'xuc xich heo l': 'Xúc xích heo L',
+  'pizza nam rau cu s': 'Nấm rau củ S',
+  'pizza nam rau cu l': 'Nấm rau củ L',
+  'xuc xich duc s': 'Xúc xích Đức S',
+  'xuc xich duc l': 'Xúc xích Đức L',
+  'ca ngu s': 'Cá ngừ S',
+  'ca ngu l': 'Cá ngừ L',
+  'ba roi xong khoi s': 'Ba rọi xông khói S',
+  'ba roi xong khoi l': 'Ba rọi xông khói L',
+
+  // --- PIZZA ĐẶC BIỆT ---
+  'salami': 'Salami L',
+  'pho mai tuoi': 'Phô mai tươi L',
+  'meat lover': 'Meat Lover L',
+  'tom thanh cua': 'Tôm thanh cua L',
+  'kho ga lap xuong': 'Khô gà - Lạp xưởng L',
+  'thap cam': 'Thập cẩm L',
+  'bo sot cay': 'Bò sốt cay L',
+  'hai san dac biet': 'Hải sản đặc biệt L',
+
+   // Món ăn nhẹ
+  'ga sot cay': 'Gà sốt cay',
+  'khoai tay chien s': 'Khoai tây chiên S',
+  'khoai tay chien l': 'Khoai tây chiên L',
+  'tok lac pho mai': 'Tok lắc phô mai',
+  'banh mi bo toi': 'Bánh mì bơ tỏi',
+  'ga lac pho mai cay s': 'Gà lắc phô mai cay S',
+  'ga lac pho mai cay l': 'Gà lắc phô mai cay L',
+  'ga ran chien gion s': 'Gà rán chiên giòn S',
+  'ga ran chien gion l': 'Gà rán chiên giòn L',
+  'mi y dut lo': 'Mì ý đút lò',
+  'mi y sot bo bam': 'Mì ý sốt bò bằm',
+  'salad ca ngu': 'Salad cá ngừ',
+  'salad dau giam': 'Salad dầu giấm',
+  'banh mi pho mai': 'Bánh mì phô mai',
+  'bap pho mai': 'Bắp phô mai',
+
+  // Nước uống
+  'coca ly': 'Coca ly',
+  'coca lon': 'Coca lon',
+  'nuoc suoi': 'Nước suối',
+  'da me hat mem': 'Đá me hạt mềm',
+  'tra chanh': 'Trà chanh',
+  'tra dao': 'Trà đào',
+  'blanc 1664': 'Blanc 1664'
+};
   for(const k in keywords) if(cleaned.includes(k)) return keywords[k];
   return input.trim();
 }
