@@ -17,10 +17,11 @@
             background: #f5f5f5;
             color: #333;
             line-height: 1.6;
+            padding-bottom: 40px;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -80,6 +81,12 @@
             border-color: #3498db;
         }
 
+        input[type="number"] {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
         .btn {
             width: 100%;
             padding: 14px;
@@ -116,43 +123,41 @@
             box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
         }
 
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
-            padding: 8px 16px;
-            width: auto;
-            font-size: 14px;
-        }
-
-        .btn-danger:hover {
-            background: #c0392b;
-        }
-
-        .btn-add {
+        .btn-secondary {
             background: #95a5a6;
             color: white;
             margin-top: 10px;
-            padding: 10px;
-            font-size: 14px;
         }
 
-        .btn-add:hover {
+        .btn-secondary:hover {
             background: #7f8c8d;
         }
 
-        .item-row {
+        .product-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 120px 80px;
-            gap: 10px;
-            align-items: end;
-            margin-bottom: 15px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
         }
 
-        .item-list {
-            margin-top: 20px;
+        .product-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .product-item:hover {
+            border-color: #3498db;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+        }
+
+        .product-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-size: 15px;
         }
 
         .hidden {
@@ -180,6 +185,18 @@
             border-radius: 8px;
             margin-bottom: 20px;
             font-size: 14px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .alert-success {
@@ -194,9 +211,32 @@
             border: 1px solid #f5c6cb;
         }
 
+        .category-title {
+            color: #2c3e50;
+            font-size: 22px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #3498db;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
         @media (max-width: 600px) {
-            .item-row {
+            .product-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 24px;
             }
         }
     </style>
@@ -228,12 +268,12 @@
                 </select>
             </div>
 
-           <div class="form-group">
+            <div class="form-group">
                 <label for="employee">Người nhập</label>
                 <input type="text" id="employee" placeholder="Nhập tên người nhập" required>
             </div>
 
-            <button class="btn btn-primary" onclick="login()">Tiếp tục</button>
+            <button class="btn btn-primary" onclick="login()">Bắt đầu nhập liệu</button>
         </div>
 
         <!-- Step 2: Input Sales -->
@@ -249,16 +289,24 @@
             <div id="alertContainer"></div>
 
             <div class="form-group">
-                <label for="category">Danh mục</label>
-                <select id="category" onchange="updateProductList()">
+                <label for="category">Chọn danh mục để nhập</label>
+                <select id="category" onchange="loadProducts()">
                     <option value="">-- Chọn danh mục --</option>
                 </select>
             </div>
 
-            <div class="item-list" id="itemList"></div>
+            <div id="productSection" class="hidden">
+                <h3 class="category-title" id="categoryTitle"></h3>
+                <div class="product-grid" id="productGrid"></div>
+                
+                <button class="btn btn-success" onclick="saveSales()">💾 Lưu dữ liệu</button>
+                <button class="btn btn-secondary" onclick="resetCategory()">🔄 Chọn danh mục khác</button>
+            </div>
 
-            <button class="btn btn-add" onclick="addItemRow()">+ Thêm mặt hàng</button>
-            <button class="btn btn-success" onclick="saveSales()">Lưu dữ liệu</button>
+            <div id="emptyState" class="empty-state">
+                <div class="empty-state-icon">📋</div>
+                <p>Vui lòng chọn danh mục để bắt đầu nhập liệu</p>
+            </div>
         </div>
     </div>
 
@@ -271,16 +319,15 @@
 
         // Dữ liệu mẫu
         const categories = [
-            { id: 1, name: 'Pizza Truyền thống Size L' },
-            { id: 2, name: 'Pizza Truyền thống Size S' },
-            { id: 3, name: 'Pizza Đặc biệt' },
-            { id: 4, name: 'Món ăn nhẹ' },
-            { id: 5, name: 'Nước uống' },
-            { id: 6, name: 'Combo' }
+            { id: 1, name: 'Pizza Truyền thống' },
+            { id: 2, name: 'Pizza Đặc biệt' },
+            { id: 3, name: 'Món ăn nhẹ' },
+            { id: 4, name: 'Nước uống' },
+            { id: 5, name: 'Combo' }
         ];
 
         const products = [
-            // --- Pizza Truyền thống Size L ---
+            // --- Pizza Truyền thống ---
             { id: 1, categoryId: 1, name: 'Bò' },
             { id: 2, categoryId: 1, name: 'Phô mai' },
             { id: 3, categoryId: 1, name: 'Gà teriyaki' },
@@ -290,62 +337,62 @@
             { id: 7, categoryId: 1, name: 'Xúc xích Đức' },
             { id: 8, categoryId: 1, name: 'Cá ngừ' },
             { id: 9, categoryId: 1, name: 'Ba rọi xông khói' },
-
-            // --- Pizza Truyền thống Size S ---
-            { id: 10, categoryId: 2, name: 'Bò' },
-            { id: 11, categoryId: 2, name: 'Phô mai' },
-            { id: 12, categoryId: 2, name: 'Gà teriyaki' },
-            { id: 13, categoryId: 2, name: 'Xúc xích heo' },
-            { id: 14, categoryId: 2, name: 'Cá ngừ' },
-            { id: 15, categoryId: 2, name: 'Ba rọi xông khói' },
+            { id: 10, categoryId: 1, name: 'Bò S' },
+            { id: 11, categoryId: 1, name: 'Phô mai S' },
+            { id: 12, categoryId: 1, name: 'Gà teriyaki S' },
+            { id: 13, categoryId: 1, name: 'Xúc xích heo S' },
+            { id: 14, categoryId: 1, name: 'Cá ngừ S' },
+            { id: 15, categoryId: 1, name: 'Ba rọi xông khói S' },
 
             // --- Pizza Đặc biệt ---
-            { id: 16, categoryId: 3, name: 'Salami' },
-            { id: 17, categoryId: 3, name: 'Phô mai tươi' },
-            { id: 18, categoryId: 3, name: 'Meat Lover' },
-            { id: 19, categoryId: 3, name: 'Tôm thanh cua' },
-            { id: 20, categoryId: 3, name: 'Khô gà - Lạp xưởng' },
-            { id: 21, categoryId: 3, name: 'Thập cẩm' },
-            { id: 22, categoryId: 3, name: 'Bò sốt cay' },
-            { id: 23, categoryId: 3, name: 'Hải sản đặc biệt' },
+            { id: 16, categoryId: 2, name: 'Salami' },
+            { id: 17, categoryId: 2, name: 'Phô mai tươi' },
+            { id: 18, categoryId: 2, name: 'Meat Lover' },
+            { id: 19, categoryId: 2, name: 'Tôm thanh cua' },
+            { id: 20, categoryId: 2, name: 'Khô gà - Lạp xưởng' },
+            { id: 21, categoryId: 2, name: 'Thập cẩm' },
+            { id: 22, categoryId: 2, name: 'Bò sốt cay' },
+            { id: 23, categoryId: 2, name: 'Hải sản đặc biệt' },
 
             
             // --- Món ăn nhẹ ---
-            { id: 24, categoryId: 4, name: 'Gà sốt cay' },
-            { id: 25, categoryId: 4, name: 'Khoai tây chiên' },
-            { id: 26, categoryId: 4, name: 'Tok lắc phô mai' },
-            { id: 27, categoryId: 4, name: 'Bánh mì bơ tỏi' },
-            { id: 28, categoryId: 4, name: 'Gà lắc phô mai cay' },
-            { id: 29, categoryId: 4, name: 'Gà rán chiên giòn' },
-            { id: 30, categoryId: 4, name: 'Mì Ý đút lò' },
-            { id: 31, categoryId: 4, name: 'Mì Ý sốt bò bằm' },
-            { id: 32, categoryId: 4, name: 'Salad cá ngừ' },
-            { id: 33, categoryId: 4, name: 'Salad dầu giấm' },
-            { id: 34, categoryId: 4, name: 'Bánh mì phô mai' },
-            { id: 35, categoryId: 4, name: 'Bắp phô mai' },
+            { id: 24, categoryId: 3, name: 'Gà sốt cay' },
+            { id: 25, categoryId: 3, name: 'Khoai tây chiên' },
+            { id: 26, categoryId: 3, name: 'Khoai tây chiên L' },
+            { id: 27, categoryId: 3, name: 'Tok lắc phô mai' },
+            { id: 28, categoryId: 3, name: 'Bánh mì bơ tỏi' },
+            { id: 29, categoryId: 3, name: 'Gà lắc phô mai cay' },
+            { id: 30, categoryId: 3, name: 'Gà lắc phô mai cay L' },
+            { id: 31, categoryId: 3, name: 'Gà rán chiên giòn' },
+            { id: 32, categoryId: 3, name: 'Mì Ý đút lò' },
+            { id: 33, categoryId: 3, name: 'Mì Ý sốt bò bằm' },
+            { id: 34, categoryId: 3, name: 'Salad cá ngừ' },
+            { id: 35, categoryId: 3, name: 'Salad dầu giấm' },
+            { id: 36, categoryId: 3, name: 'Bánh mì phô mai' },
+            { id: 37, categoryId: 3, name: 'Bắp phô mai' },
 
             // --- Nước uống ---
-            { id: 36, categoryId: 5, name: 'Nước ngọt' },
-            { id: 37, categoryId: 5, name: 'Nước suối' },
-            { id: 38, categoryId: 5, name: 'Đá me hạt mềm' },
-            { id: 39, categoryId: 5, name: 'Trà chanh' },
-            { id: 40, categoryId: 5, name: 'Trà đào' },
-            { id: 41, categoryId: 5, name: 'Blanc 1664' },
+            { id: 38, categoryId: 4, name: 'Nước ngọt' },
+            { id: 39, categoryId: 4, name: 'Nước suối' },
+            { id: 40, categoryId: 4, name: 'Đá me hạt mềm' },
+            { id: 41, categoryId: 4, name: 'Trà chanh' },
+            { id: 42, categoryId: 4, name: 'Trà đào' },
+            { id: 43, categoryId: 4, name: 'Blanc 1664' },
 
             // --- Combo ---
-            { id: 42, categoryId: 6, name: 'Combo 1' },
-            { id: 43, categoryId: 6, name: 'Combo 2' },
-            { id: 44, categoryId: 6, name: 'Combo 3' },
-            { id: 45, categoryId: 6, name: 'Combo 4' },
-            { id: 46, categoryId: 6, name: 'Combo 5' },
-            { id: 47, categoryId: 6, name: 'Combo 6' },
-            { id: 48, categoryId: 6, name: 'Combo 7' },
-            { id: 49, categoryId: 6, name: 'Combo 8' }
+            { id: 44, categoryId: 5, name: 'Combo 1' },
+            { id: 45, categoryId: 5, name: 'Combo 2' },
+            { id: 46, categoryId: 5, name: 'Combo 3' },
+            { id: 47, categoryId: 5, name: 'Combo 4' },
+            { id: 48, categoryId: 5, name: 'Combo 5' },
+            { id: 49, categoryId: 5, name: 'Combo 6' },
+            { id: 50, categoryId: 5, name: 'Combo 7' },
+            { id: 51, categoryId: 5, name: 'Combo 8' }
 
         ];
 
+
         let sessionData = {};
-        let itemCounter = 0;
 
         // Khởi tạo
         document.addEventListener('DOMContentLoaded', () => {
@@ -369,7 +416,7 @@
             const employee = document.getElementById('employee').value;
 
             if (!date || !store || !employee) {
-                showAlert('Vui lòng điền đầy đủ thông tin!', 'error');
+                alert('Vui lòng điền đầy đủ thông tin!');
                 return;
             }
 
@@ -383,126 +430,89 @@
             document.getElementById('inputStep').classList.remove('hidden');
         }
 
-        function updateProductList() {
+        function loadProducts() {
+            const categoryId = parseInt(document.getElementById('category').value);
+            
+            if (!categoryId) {
+                document.getElementById('productSection').classList.add('hidden');
+                document.getElementById('emptyState').classList.remove('hidden');
+                return;
+            }
+
+            const selectedCategory = categories.find(c => c.id === categoryId);
+            const filteredProducts = products.filter(p => p.categoryId === categoryId);
+
+            document.getElementById('categoryTitle').textContent = selectedCategory.name;
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('productSection').classList.remove('hidden');
+
+            const productGrid = document.getElementById('productGrid');
+            productGrid.innerHTML = '';
+
+            filteredProducts.forEach(product => {
+                const item = document.createElement('div');
+                item.className = 'product-item';
+                item.innerHTML = `
+                    <div class="product-name">${product.name}</div>
+                    <input 
+                        type="number" 
+                        id="qty-${product.id}" 
+                        min="0"  
+                        placeholder="Số lượng"
+                    >
+                `;
+                productGrid.appendChild(item);
+            });
+        }
+
+        function resetCategory() {
+            document.getElementById('category').value = '';
+            document.getElementById('productSection').classList.add('hidden');
+            document.getElementById('emptyState').classList.remove('hidden');
+            clearAlert();
+        }
+
+        async function saveSales() {
             const categoryId = parseInt(document.getElementById('category').value);
             if (!categoryId) return;
 
             const filteredProducts = products.filter(p => p.categoryId === categoryId);
-            
-            // Cập nhật tất cả dropdown sản phẩm hiện có
-            document.querySelectorAll('.product-select').forEach(select => {
-                const currentValue = select.value;
-                select.innerHTML = '<option value="">-- Chọn mặt hàng --</option>';
-                filteredProducts.forEach(product => {
-                    const option = document.createElement('option');
-                    option.value = product.id;
-                    option.textContent = product.name;
-                    select.appendChild(option);
-                });
-                select.value = currentValue;
-            });
-        }
-
-        function addItemRow() {
-            const categoryId = parseInt(document.getElementById('category').value);
-            if (!categoryId) {
-                showAlert('Vui lòng chọn danh mục trước!', 'error');
-                return;
-            }
-
-            const filteredProducts = products.filter(p => p.categoryId === categoryId);
-            itemCounter++;
-
-            const itemList = document.getElementById('itemList');
-            const row = document.createElement('div');
-            row.className = 'item-row';
-            row.id = `item-${itemCounter}`;
-
-            let productOptions = '<option value="">-- Chọn mặt hàng --</option>';
-            filteredProducts.forEach(product => {
-                productOptions += `<option value="${product.id}">${product.name}</option>`;
-            });
-
-            row.innerHTML = `
-                <div class="form-group" style="margin: 0;">
-                    <label>Danh mục</label>
-                    <input type="text" value="${categories.find(c => c.id === categoryId).name}" readonly style="background: #ecf0f1;">
-                </div>
-                <div class="form-group" style="margin: 0;">
-                    <label>Mặt hàng</label>
-                    <select class="product-select" required>
-                        ${productOptions}
-                    </select>
-                </div>
-                <div class="form-group" style="margin: 0;">
-                    <label>Số lượng</label>
-                    <input type="number" class="quantity-input" min="1" value="1" required>
-                </div>
-                <div class="form-group" style="margin: 0;">
-                    <label>&nbsp;</label>
-                    <button class="btn btn-danger" onclick="removeItem(${itemCounter})">Xóa</button>
-                </div>
-            `;
-
-            itemList.appendChild(row);
-        }
-
-        function removeItem(id) {
-            const item = document.getElementById(`item-${id}`);
-            if (item) item.remove();
-        }
-
-        async function saveSales() {
-            const rows = document.querySelectorAll('.item-row');
-            if (rows.length === 0) {
-                showAlert('Vui lòng thêm ít nhất một mặt hàng!', 'error');
-                return;
-            }
-
             const salesData = [];
-            let isValid = true;
 
-            rows.forEach(row => {
-                const productId = row.querySelector('.product-select').value;
-                const quantity = row.querySelector('.quantity-input').value;
-
-                if (!productId || !quantity || quantity < 1) {
-                    isValid = false;
-                    return;
+            filteredProducts.forEach(product => {
+                const quantity = parseInt(document.getElementById(`qty-${product.id}`).value) || 0;
+                
+                if (quantity > 0) {
+                    const category = categories.find(c => c.id === categoryId);
+                    salesData.push({
+                        date: sessionData.date,
+                        store: sessionData.store,
+                        employee: sessionData.employee,
+                        category: category.name,
+                        product_name: product.name,
+                        quantity: quantity,
+                        created_at: new Date().toISOString()
+                    });
                 }
-
-                const product = products.find(p => p.id === parseInt(productId));
-                salesData.push({
-                    date: sessionData.date,
-                    store: sessionData.store,
-                    employee: sessionData.employee,
-                    category: categories.find(c => c.id === product.categoryId).name,
-                    product_name: product.name,
-                    quantity: parseInt(quantity),
-                    created_at: new Date().toISOString()
-                });
             });
 
-            if (!isValid) {
-                showAlert('Vui lòng điền đầy đủ thông tin cho tất cả mặt hàng!', 'error');
+            if (salesData.length === 0) {
+                showAlert('⚠️ Vui lòng nhập số lượng cho ít nhất một mặt hàng!', 'error');
                 return;
             }
 
             try {
-                // Lưu vào Supabase
                 const { data, error } = await supabase
                     .from(TABLE_NAME)
                     .insert(salesData);
 
                 if (error) throw error;
 
-                showAlert('✅ Lưu dữ liệu thành công!', 'success');
+                showAlert(`✅ Đã lưu ${salesData.length} mặt hàng thành công!`, 'success');
                 
-                // Reset form
+                // Reset form sau 1.5 giây
                 setTimeout(() => {
-                    document.getElementById('itemList').innerHTML = '';
-                    document.getElementById('category').value = '';
-                    itemCounter = 0;
+                    resetCategory();
                 }, 1500);
 
             } catch (error) {
@@ -519,9 +529,15 @@
             container.innerHTML = '';
             container.appendChild(alert);
 
-            setTimeout(() => {
-                alert.remove();
-            }, 5000);
+            if (type === 'success') {
+                setTimeout(() => {
+                    alert.remove();
+                }, 3000);
+            }
+        }
+
+        function clearAlert() {
+            document.getElementById('alertContainer').innerHTML = '';
         }
     </script>
 </body>
